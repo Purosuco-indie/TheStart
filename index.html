@@ -1,30 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Puro Suco Indie Engine - Dev Tool</title>
+    <title>Puro Suco Indie - Editor</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-    <div id="app">
-        <canvas id="gameCanvas"></canvas>
-        
-        <div id="dev-overlay">
-            <header>
-                <h1>PURO SUCO INDIE ENGINE // MVP</h1>
-                <div class="controls">
-                    <button id="btn-run">RODAR</button>
-                    <button id="btn-pause">PAUSAR</button>
-                    <button id="btn-step">STEP</button>
-                </div>
-            </header>
-            <div id="log-panel">
-                <div class="log-entry">> Sistema inicializado.</div>
+    <div id="editor-layout">
+        <!-- TOP BAR -->
+        <header id="top-bar">
+            <div class="brand">PURO SUCO INDIE ENGINE v0.2</div>
+            <div class="controls">
+                <button id="btn-run" title="Run Game">RUN</button>
+                <button id="btn-pause" title="Pause Game">PAUSE</button>
+                <button id="btn-reset" title="Reset Scene">RESET</button>
+                <button id="btn-step" title="Step Forward">STEP >></button>
             </div>
-        </div>
+            <div class="status" id="engine-status">STATUS: STOPPED</div>
+        </header>
+
+        <!-- MAIN AREA -->
+        <main id="main-area">
+            <!-- CANVAS CONTAINER -->
+            <div id="canvas-container">
+                <canvas id="gameCanvas"></canvas>
+            </div>
+
+            <!-- SIDEBAR -->
+            <aside id="sidebar">
+                <div class="panel-header">SCENE INSPECTOR</div>
+                <ul id="entity-list">
+                    <!-- Dynamic List -->
+                </ul>
+
+                <div class="panel-header" style="margin-top: 20px;">PROPERTIES</div>
+                <div id="properties-panel">
+                    <div class="prop-row"><label>ID:</label> <span id="prop-id">-</span></div>
+                    <div class="prop-row"><label>Type:</label> <span id="prop-type">-</span></div>
+                    <div class="prop-row"><label>X:</label> <span id="prop-x">0</span></div>
+                    <div class="prop-row"><label>Y:</label> <span id="prop-y">0</span></div>
+                </div>
+
+                <div class="panel-header" style="margin-top: auto;">LOGS</div>
+                <div id="log-panel"></div>
+            </aside>
+        </main>
     </div>
-    
+
     <script type="module" src="src/main.js"></script>
 </body>
+
 </html>

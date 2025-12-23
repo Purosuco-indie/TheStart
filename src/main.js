@@ -1,65 +1,59 @@
 import { Game } from './core/Game.js';
+import { Editor } from './editor/Editor.js';
 import { Entity } from './entities/Entity.js';
 
-// Bootstrap
 window.addEventListener('load', () => {
+    // 1. Initialize Game
     const game = new Game('gameCanvas');
-    window.game = game; // Expose for debugging
 
-    // Dev Tools UI
-    const btnRun = document.getElementById('btn-run');
-    const btnPause = document.getElementById('btn-pause');
+    // 2. Define Demo Scene content injection
+    game.onReset = (g) => {
+        // Floor
+        const floor = new Entity(50, 500, 700, 40, "STRUCTURAL");
+        g.add(floor);
 
-    btnRun.addEventListener('click', () => {
-        game.start();
-        game.logger.log("Comando: RODAR");
-    });
+        // Wall
+        const wall = new Entity(600, 350, 40, 150, "STRUCTURAL");
+        g.add(wall);
 
-    btnPause.addEventListener('click', () => {
-        game.stop();
-        game.logger.log("Comando: PAUSAR");
-    });
+        // Player
+        const player = new Entity(100, 100, 40, 40, "FUNCTIONAL");
+        player.update = (dt) => {
+            player.vy += 600 * dt; // Gravity
+            player.y += player.vy * dt;
+            player.x += player.vx * dt;
 
-    // --- EXAMPLE SETUP ---
-    // Creating some floor
-    const floor = new Entity(100, 500, 600, 50, "STRUCTURAL");
-    game.add(floor);
+            // Simple controls
+            if (g.input.isDown('LEFT')) player.x -= 200 * dt;
+            if (g.input.isDown('RIGHT')) player.x += 200 * dt;
+            if (g.input.isPressed('JUMP')) player.vy = -300;
 
-    // Creating a player
-    const player = new Entity(200, 200, 40, 40, "FUNCTIONAL");
-    player.update = (dt) => {
-        // Simple gravity
-        player.vy += 500 * dt;
-        player.y += player.vy * dt;
-        player.x += player.vx * dt;
-
-        // Simple Controls
-        if (game.input.isDown('LEFT')) player.x -= 200 * dt;
-        if (game.input.isDown('RIGHT')) player.x += 200 * dt;
-
-        // Floor Collision (Hardcoded for now just to prove it works before AABB)
-        if (player.y + player.h > floor.y &&
-            player.x + player.w > floor.x &&
-            player.x < floor.x + floor.w) {
-
-            player.y = floor.y - player.h;
-            player.vy = 0;
-
-            if (game.input.isPressed('JUMP')) {
-                player.vy = -300;
+            // Floor collision (Naive)
+            if (player.y + player.h > floor.y && player.x + player.w > floor.x && player.x < floor.x + floor.w) {
+                player.y = floor.y - player.h;
+                player.vy = 0;
             }
-        }
-    };
-    // Override draw to use renderer line types correctly? 
-    // Actually Base Entity doesn't know about specialized drawing.
-    // Let's monkey-patch draw for this example or update Entity to use proper type.
-    player.draw = (renderer) => {
-        renderer.rect(player.x, player.y, player.w, player.h, "FUNCTIONAL");
+        };
+        // Custom draw
+        player.draw = (r) => {
+            r.rect(player.x, player.y, player.w, player.h, "FUNCTIONAL");
+            // Eyes
+            r.line(player.x + 10, player.y + 10, player.x + 10, player.y + 20, "NARRATIVE");
+            r.line(player.x + 30, player.y + 10, player.x + 30, player.y + 20, "NARRATIVE");
+        };
+
+        g.add(player);
+
+        g.logger.log("Scene Loaded: Demo Platformer");
     };
 
-    floor.draw = (renderer) => {
-        renderer.rect(floor.x, floor.y, floor.w, floor.h, "STRUCTURAL");
-    };
+    // 3. Initialize Editor
+    const editor = new Editor(game);
 
-    game.add(player);
+    // 4. Boot
+    game.init(); // Sets up the scene via onReset
+
+    // Expose for debugging
+    window.game = game;
+    window.editor = editor;
 });
