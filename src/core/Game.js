@@ -4,6 +4,7 @@ import { EntityManager } from '../entities/Entity.js';
 import { Renderer } from '../render/Renderer.js';
 import { CollisionManager } from '../physics/Collision.js';
 import { Logger } from '../utils/Logger.js';
+import { StateManager } from './StateManager.js';
 
 export class Game {
     constructor(canvasId) {
@@ -23,73 +24,44 @@ export class Game {
         this.collision = new CollisionManager();
         this.logger = new Logger();
 
-        // Game State exposed for Editor
-        this.state = 'STOPPED'; // STOPPED, RUNNING, PAUSED
+        // Data-Driven State Manager
+        this.stateManager = new StateManager(this);
     }
 
     resize() {
-        // In Editor mode, canvas size might be controlled by CSS container
-        // But for now, let's keep it robust
         const rect = this.canvas.parentElement.getBoundingClientRect();
         this.canvas.width = rect.width;
         this.canvas.height = rect.height;
     }
 
-    // --- API FOR EDITOR ---
-
-    init() {
-        // Setup initial demo scene (this would be level loading in future)
-        this.reset();
+    async init() {
+        await this.stateManager.init();
+        this.start(); // Auto-start the loop (but logic depends on state)
     }
 
     start() {
-        if (this.state === 'RUNNING') return;
-
-        this.state = 'RUNNING';
         this.loop.start(
             (dt) => this.update(dt),
             () => this.render()
         );
-        this.logger.log("Engine: Change State -> RUNNING");
     }
 
-    pause() {
-        if (this.state === 'PAUSED') return;
-        this.state = 'PAUSED';
-        this.loop.stop(); // Stop loop
-        this.logger.log("Engine: Change State -> PAUSED");
-        // Force one render to keep screen content
-        this.render();
+    stop() {
+        this.loop.stop();
     }
 
+    // Editor bridge methods
+    pause() { this.loop.stop(); }
+    resume() { this.start(); }
+
+    // Reset now means "Return to Flow Initial State" or "Restart Scene"
     reset() {
-        this.pause();
-        this.entities.entities = []; // Clear
-        this.state = 'STOPPED';
-
-        // Re-add demo content
-        // In a real engine, this would reload the "Scene"
-        this.setupDemoScene();
-
-        this.render();
-        this.logger.log("Engine: RESET");
+        this.stateManager.transitionTo(this.stateManager.flow.initialState);
     }
 
     step() {
-        // Advance exactly one frame (16ms)
         this.update(0.016);
         this.render();
-        this.logger.log("Engine: STEP");
-    }
-
-    // --- INTERNAL ---
-
-    setupDemoScene() {
-        // Placeholder for demo scene creation
-        // This is usually done externally, but for MVP we hardcode it here or Injection
-        // We will leave this empty and let main.js or Editor inject content for now
-        // Or better: trigger an event "onReset"
-        if (this.onReset) this.onReset(this);
     }
 
     add(entity) {
@@ -98,6 +70,8 @@ export class Game {
 
     update(dt) {
         this.input.update();
+
+        // Only update entities if valid state (e.g. not loading)
         this.entities.update(dt);
         this.collision.resolve(this.entities);
     }

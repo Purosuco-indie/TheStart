@@ -1,0 +1,16 @@
+{
+    "initialState": "MENU",
+    "states": [
+        "BOOT",
+        "MENU",
+        "GAME",
+        "GAMEOVER"
+    ],
+    "transitions": [
+        { "from": "BOOT", "to": "MENU", "trigger": "AUTO" },
+        { "from": "MENU", "to": "GAME", "trigger": "START" },
+        { "from": "GAME", "to": "GAMEOVER", "trigger": "LOSE" },
+        { "from": "GAME", "to": "MENU", "trigger": "QUIT" },
+        { "from": "GAMEOVER", "to": "MENU", "trigger": "RESTART" }
+    ]
+}

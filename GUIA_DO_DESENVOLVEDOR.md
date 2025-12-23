@@ -1,80 +1,78 @@
 # Guia do Desenvolvedor - Puro Suco Indie Engine
 
-Bem-vindo à documentação oficial do **Puro Suco Indie**, o motor de jogo que rejeita a perfeição em favor da expressão.
+**Puro Suco Indie** é uma engine 2D Data-Driven. O código executa, mas os dados mandam.
 
 ---
 
-## 1. O Editor (Ambiente de Trabalho)
+## 1. O Fluxo Obrigatório
 
-A engine agora roda dentro de um ambiente controlado, projetado para engenharia, não para arte.
+Todo jogo segue estritamente este fluxo (State Machine):
+`BOOT` → `MENU` → `GAME` → `GAMEOVER`
 
--   **Top Bar**: Controle o fluxo (`RUN`, `PAUSE`, `RESET`, `STEP`).
--   **Inspector**: Veja todas as entidades da cena na barra lateral. Clique em uma para ver suas coordenadas (X, Y).
--   **Canvas**: Onde a simulação acontece.
-
----
-
-## 2. A Filosofia do Traço
-
-Antes de codar, entenda onde você está:
-- **Nada é reto**: O mundo é feito de tinta, não de vetores.
-- **Branco Sólido**: O canvas é limpo a cada frame com branco puro.
-- **Sem Decoração**: Se não tem colisão ou função, não desenhe.
+Você não codifica esse fluxo. Ele é definido em **`src/data/flow.json`**.
 
 ---
 
-## 3. Arquitetura Básica
+## 2. Source of Truth (JSON)
 
-O motor roda em um loop clássico, agora gerenciado pelo Editor:
+O Editor não salva o projeto. Ele lê arquivos.
+Para criar uma fase, você edita um arquivo JSON.
 
-1.  **Editor Loop**: O Editor controla quando o o Game update ocorre.
-2.  **Scene Reset**: Ao clicar em `RESET`, o jogo chama `game.onReset(game)` para reconstruir a cena.
-3.  **Entity Lifecycle**: Entidades são gerenciadas pelo EntityManager e expostas ao Inspector.
+### Estrutura de Cena (`scene.json`)
 
----
+```json
+{
+    "name": "Level 1",
+    "type": "GAME",
+    "entities": [
+        {
+            "id": "player1",
+            "type": "FUNCTIONAL",
+            "x": 100, 
+            "y": 200, 
+            "w": 40, 
+            "h": 40,
+            "behavior": "PlayerBehavior"
+        }
+    ]
+}
+```
 
-## 4. Criando sua Cena
+### Comportamentos (Behaviors)
 
-A maneira correta de inicializar uma cena é definindo `game.onReset` no seu `main.js`:
+O JSON define *quem* está na cena. O Código define *o que* eles fazem.
+Em `main.js` (ou seus módulos), você registra comportamentos:
 
 ```javascript
-window.addEventListener('load', () => {
-    // Inicializa o Game e o Editor
-    const game = new Game('gameCanvas');
-    const editor = new Editor(game);
-
-    // Define o conteúdo da cena
-    game.onReset = (g) => {
-        // Criar Chão
-        const floor = new Entity(0, 500, 800, 50, "STRUCTURAL");
-        g.add(floor);
-
-        // Criar Jogador
-        const player = new Entity(100, 100, 40, 40, "FUNCTIONAL");
-        player.update = (dt) => {
-             // Lógica de update
-        };
-        g.add(player);
+game.stateManager.loader.registerBehavior("PlayerBehavior", (ent, game) => {
+    ent.update = (dt) => {
+        // Lógica de movimento
     };
-
-    // Boot
-    game.init(); 
 });
 ```
 
 ---
 
-## 5. API Reference (Atualizado)
+## 3. O Editor Visual
 
-### `Game`
-- `start()`, `pause()`, `step()`, `reset()`: Controle de estado.
-- `state`: 'RUNNING', 'PAUSED', 'STOPPED'.
+O Editor (`index.html`) é sua janela para essa máquina de estados.
 
-### `Renderer`
-- `line(x1, y1, x2, y2, type)`: Desenha linha imperfeita.
-- `rect(x, y, w, h, type)`: Desenha retângulo imperfeito.
-- Tipos: "STRUCTURAL" (Grosso), "FUNCTIONAL" (Médio), "NARRATIVE" (Fino/Instável).
+-   **FLOW STATUS**: Mostra se você está no Menu ou no Jogo.
+-   **HIERARCHY**: Mostra as entidades carregadas do JSON atual.
+-   **RESET**: Reinicia o fluxo (volta para o estado inicial definido no flow.json).
 
 ---
 
-**Puro Suco Indie** é sobre fazer mais com menos. Boa sorte.
+## 4. Como Criar um Novo Nível
+
+1.  Crie `src/data/level2.scene.json`.
+2.  Adicione a transição em `src/data/flow.json`:
+    ```json
+    { "from": "GAME", "to": "LEVEL2", "trigger": "NEXT_LEVEL" }
+    ```
+3.  No código do Player, quando tocar na saída:
+    ```javascript
+    game.stateManager.trigger("NEXT_LEVEL");
+    ```
+
+Simples. Rígido. Funcional.

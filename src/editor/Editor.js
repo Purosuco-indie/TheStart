@@ -3,7 +3,6 @@ export class Editor {
         this.game = game;
         this.selectedEntity = null;
 
-        // Cache UI Elements
         this.ui = {
             btnRun: document.getElementById('btn-run'),
             btnPause: document.getElementById('btn-pause'),
@@ -20,14 +19,12 @@ export class Editor {
         };
 
         this.bindEvents();
-
-        // Start an UI update loop (independent of game loop)
         this.uiLoopId = setInterval(() => this.updateUI(), 100);
     }
 
     bindEvents() {
         this.ui.btnRun.addEventListener('click', () => {
-            this.game.start();
+            this.game.resume();
         });
 
         this.ui.btnPause.addEventListener('click', () => {
@@ -35,28 +32,26 @@ export class Editor {
         });
 
         this.ui.btnReset.addEventListener('click', () => {
-            this.game.reset();
+            this.game.reset(); // This now triggers StateManager reset to InitialState
         });
 
         this.ui.btnStep.addEventListener('click', () => {
-            if (this.game.state !== 'PAUSED' && this.game.state !== 'STOPPED') {
-                this.game.pause();
-            }
             this.game.step();
         });
     }
 
     updateUI() {
-        // Update Status Text
-        this.ui.status.textContent = `STATUS: ${this.game.state}`;
+        // Show Engine State AND Game Flow State
+        const flowState = this.game.stateManager ? this.game.stateManager.currentState : "BOOT";
+        // We don't have an explicit 'running/paused' prop in game anymore, we rely on loop or explicit flag
+        // Let's assume Game.js methods handle loop.
 
-        // Update Entity List (Slow poll - simple implementation)
-        // Ideally we only update on change, but for MVP polling is safer
+        this.ui.status.textContent = `FLOW: ${flowState}`;
+
         this.refreshEntityList();
 
-        // Update Inspector
         if (this.selectedEntity) {
-            this.ui.props.id.textContent = "Entity"; // We interpret index as ID for now
+            this.ui.props.id.textContent = this.selectedEntity.id || "Entity";
             this.ui.props.type.textContent = this.selectedEntity.type;
             this.ui.props.x.textContent = Math.round(this.selectedEntity.x);
             this.ui.props.y.textContent = Math.round(this.selectedEntity.y);
@@ -71,17 +66,11 @@ export class Editor {
     refreshEntityList() {
         const entities = this.game.entities.getAll();
 
-        // Basic diffing to avoid destroying DOM every 100ms
-        // Note: For a real engine, we'd use a reactive store or event system. 
-        // This is a "raw" implementation.
-
-        // Clearing is expensive, so let's only rebuild if count differs for now
-        // A better approach is to match IDs.
         if (this.ui.entityList.childElementCount !== entities.length) {
             this.ui.entityList.innerHTML = '';
             entities.forEach((ent, index) => {
                 const li = document.createElement('li');
-                li.textContent = `[${index}] ${ent.type}`;
+                li.textContent = `[${ent.id || index}] ${ent.type}`;
                 li.addEventListener('click', () => {
                     this.selectEntity(ent, li);
                 });
@@ -96,7 +85,6 @@ export class Editor {
 
     selectEntity(entity, liElement) {
         this.selectedEntity = entity;
-        // Visual feedback
         Array.from(this.ui.entityList.children).forEach(c => c.classList.remove('selected'));
         liElement.classList.add('selected');
     }
