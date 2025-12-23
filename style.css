@@ -1,0 +1,79 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+body {
+    overflow: hidden;
+    background: #e0e0e0;
+}
+
+#app {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+canvas {
+    background: #FFFFFF;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+}
+
+#dev-overlay {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 300px;
+    height: auto;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    border: 2px solid black;
+    box-shadow: 5px 5px 0px rgba(0,0,0,0.5);
+}
+
+header h1 {
+    font-size: 12px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid white;
+    padding-bottom: 5px;
+}
+
+.controls {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+button {
+    background: white;
+    border: 1px solid black;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 10px;
+}
+
+button:hover {
+    background: #ccc;
+}
+
+#log-panel {
+    height: 150px;
+    overflow-y: auto;
+    font-size: 10px;
+    border-top: 1px dashed #666;
+    padding-top: 5px;
+}
+
+.log-entry {
+    margin-bottom: 2px;
+    opacity: 0.8;
+}
